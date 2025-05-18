@@ -1,6 +1,6 @@
 # SPL Basics
 
-> A reference for core splunk search concepts & syntax.
+> A reference for core splunk search concepts & syntax. <br>
 > Adding new entries as we discover them 🔎
 
 ---
