@@ -7,6 +7,7 @@
 
 ## 📝 Table of Contents
 1. [Search Syntax](#search-syntax)
+2. [Wildcards](#wildcards)
 
 ---
 
@@ -25,3 +26,21 @@ index="main" ERROR
 
 # Explicit
 search index="main" ERROR
+```
+
+## Wildcards
+
+**Definition:**<br>
+Wildcards (*) can replace any number of characters in searches and field values <br>
+
+### Syntax <br>
+```spl
+field="prefix*"     # matches any value that start with "prefix"
+field="*suffix"     # matches any value that ends with "suffix"
+field="*middle*"    # matches any value containing "middle"
+```
+### Example <br>
+```spl
+search index=main "*UNKOWN*"
+```
+**Retrieves** all events in the main index whose raw text contains the substring "UNKNOWN" anywhere in the event. <br>
