@@ -12,7 +12,7 @@
 
 ## Search Syntax
 
-**Definition**
+**Definition:**<br>
 The most fundamental aspect of SPL is searching. By default, a search returns all events, but it can be narrowed down with keywords <br>
 boolean operators, comparison operators, and wildcard characters. For instance, a search for error would return all containing <br>
 that word. <br>
