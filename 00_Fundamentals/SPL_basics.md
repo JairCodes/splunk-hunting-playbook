@@ -11,6 +11,10 @@
 3. [Fields and Comparison Operators](#fields-and-comparison-operators)
 4. [The fields command](#the-fields-command)
 5. [The table command](#the-table-command)
+6. [The rename column](#the-rename-column)
+7. [The dedup command](#the-dedup-command)
+8. [The sort command](#the-sort-command)
+9. [The stats command](#the-stats-command)
 
 ---
 
@@ -86,3 +90,56 @@ index="main" sourcetype="WinEventLog:Sysmon" EventCode=1
 This query **returns** process creation events, then arranges selected fields (_time, host, and Image) in a tabular format. _time is the <br>
 timestamp of the event, host is the name of the host where the event occurred, and Image is the name of the executable file that <br>
 represents the process. <br>
+
+## The rename command
+
+**Definition:**<br>
+The **rename** command renames a field in the search results. <br>
+
+### Example <br>
+```spl
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=1
+| rename Image as Process
+```
+This command **renames** the Image field to Process in the search results. Image field in Sysmon logs represents the name of the <br>
+executable file for the process. By renaming it, all the subsequent references to Process would now refer to what was originally the <br>
+Image field. <br>
+
+## The dedup command
+
+**Definition:**<br>
+The 'dedup' command removes duplicate events. <br>
+
+### Example <br>
+```spl
+index="main" sourcetype="WinLogEvent=Sysmon" EvenCode=1
+| dedup Image
+```
+The dedup command removes duplicate entries based on the Image field from the process creation events. This means if the same <br>
+process (Image) is created multiple times, it will appear only once in the results, effectively removing repetition. <br>
+
+## The sort command
+
+**Definition:**<br>
+The **sort** command sorts the search results. <br>
+
+### Example <br>
+```spl
+index="main" sourcetype="WinEventLog=Sysmon" EventCode=1
+| sort - _time
+```
+This command sorts all process creation events in the main index in descending order of their timestamps (_time), i.e., the most recent <br>
+events are shown first. <br>
+
+## The stats command
+
+**Definition:**<br>
+The stats command performs statistical operations. <br>
+
+### Example <br>
+```spl
+index="main" sourcetype="WinLogEvent=Sysmon" EvenCode=3
+| stats count by _time, Image
+```
+**Retrieves** a table where each row represents a unique combination of a timestamp (_time) and a process (Image). The count <br>
+column indicates the number of network connection events that occurred for that specific process at that specific time. <br>
