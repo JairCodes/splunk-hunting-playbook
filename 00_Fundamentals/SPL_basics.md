@@ -18,6 +18,7 @@
 10. [The chart command](#the-chart-command)
 11. [The eval command](#the-eval-command)
 12. [The rex command](#the-rex-command)
+13. [The lookup command](#the-lookup-command)
 
 ---
 
