@@ -11,10 +11,13 @@
 3. [Fields and Comparison Operators](#fields-and-comparison-operators)
 4. [The fields command](#the-fields-command)
 5. [The table command](#the-table-command)
-6. [The rename column](#the-rename-column)
+6. [The rename command](#the-rename-command)
 7. [The dedup command](#the-dedup-command)
 8. [The sort command](#the-sort-command)
 9. [The stats command](#the-stats-command)
+10. [The chart command](#the-chart-command)
+11. [The eval command](#the-eval-command)
+12. [The rex command](#the-rex-command)
 
 ---
 
@@ -143,3 +146,101 @@ index="main" sourcetype="WinLogEvent=Sysmon" EvenCode=3
 ```
 **Retrieves** a table where each row represents a unique combination of a timestamp (_time) and a process (Image). The count <br>
 column indicates the number of network connection events that occurred for that specific process at that specific time. <br>
+<br>
+**However**, it's challenging to visualize this data over time for each process because the data for each process is interspersed throughout <br>
+the table. We'd need to manually filter by process (Image) to see the counts over time for each one. <br>
+
+## The chart command
+
+**Definition:**<br>
+The chart command creates a data visualization based on statistical operations. 
+
+### Example <br>
+```spl
+index="main" sourcetype="WinLogEvent=Sysmon" EvenCode=3
+| chart count by _time, Image
+```
+**Retrieves** a table where each row represents a unique timestamp (_time) and each column represents a unique process <br>
+(Image). The cell values indicate the number of network connection events that occurred for each process at each specific time. <br>
+<br>
+With the chart command, you can easily visualize the data over time for each process because each process has its own column. You <br>
+can quickly see at a glance the count of network connection events over time for each process. <br>
+
+## The eval command
+
+**Definition:**<br>
+The **eval** command creates or redefines fields.
+
+### Example <br>
+```spl
+index="main" sourcetype="WinLogEvent=Sysmon" EvenCode=1
+| eval Process_Path=lower(Image)
+```
+This command creates a new field Process_Path which contains the lowercase version of the Image field. It doesn't change the actual <br>
+Image field, but creates a new field that can be used in subsequent operations or for display purposes. <br>
+
+## The rex command
+
+**Definition:**<br>
+The rex command extracts new fields from existing ones using regular expressions.
+
+### Example <br>
+```spl
+index="main" EventCode=4662
+| rex max_match=0 "[^%](?<guid>{.*})"
+| table guid
+```
+- index="main" EventCode=4662 filters the events to those in the main index with the EventCode equal to 4662. <br>
+This narrows down the search to specific events with the specified EventCode. <br>
+- rex max_match=0 "[^%](?<guid>{.*})" uses the rex command to extract values matching the pattern from the <br>
+events' fields. The regex pattern {.*} looks for substrings that begin with { and end with }. The [^%] <br>
+part ensures that the match does not begin with a % character. The captured value within the curly <br>
+braces is assigned to the named capture group guid. <br>
+- table guid displays the extracted GUIDs in the output. This command is used to format the results and <br>
+display only the guid field. <br>
+- The max_match=0 option ensures that all occurrences of the pattern are extracted from each event. By <br>
+default, the rex command only extracts the first occurrence. <br>
+
+## The lookup command
+
+**Definition:**<br>
+The **lookup** command enriches the data with external sources. <br>
+
+### Example <br>
+Suppose the following CSV file called malware_lookup.csv. <br>
+```spl
+filename, is_malware
+notepad.exe, false
+cmd.exe, false
+powershell.exe, false
+sharphound.exe, true
+randomfile.exe, true
+```
+we can do the following, <br>
+```spl
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=1
+ | rex field=Image "(?P<filename>[^\\\]+)$"
+ | eval filename=lower(filename)
+ | lookup malware_lookup.csv filename OUTPUTNEW is_malware
+ | table filename, is_malware
+```
+- index="main" sourcetype="WinEventLog:Sysmon" EventCode=1: This is the search criteria. It's looking for <br>
+Sysmon logs (as identified by the sourcetype) with an EventCode of 1 (which represents process <br>
+creation events) in the "main" index. <br>
+- | rex field=Image "(?P<filename>[^\\\]+)$": This command is using the regular expression (regex) to <br>
+extract a part of the Image field. The Image field in Sysmon EventCode=1 logs typically contains the <br>
+full file path of the process. This regex is saying: Capture everything after the last backslash <br>
+(which should be the filename itself) and save it as filename. <br>
+- | eval filename=lower(filename): This command is taking the filename that was just extracted and <br>
+converting it to lowercase. The lower() function is used to ensure the search is case-insensitive. <br>
+- | lookup malware_lookup.csv filename OUTPUTNEW is_malware: This command is performing a lookup operation <br>
+using the filename as a key. The lookup table (malware_lookup.csv) is expected to contain a list of <br>
+filenames of known malicious executables. If a match is found in the lookup table, the new field <br>
+is_malware is added to the event, which indicates whether or not the process is considered malicious <br>
+based on the lookup table. <-- filename in this part of the query is the first column title in the CSV. <br>
+- | table filename, is_malware: This command is formatting the output to show only the fields filename and <br>
+is_malware. If is_malware is not present in a row, it means that no match was found in the lookup <br>
+table for that filename. <br>
+<br>
+In summary, this query is extracting the filenames of newly created processes, converting them to lowercase, comparing them against <br>
+a list of known malicious filenames, and presenting the findings in a table. <br>
